@@ -249,7 +249,7 @@ class AnalyticsController extends BaseApiController
             'analysis_date' => $today->toDateString(),
         ];
 
-        $analysis = $this->gapGptService->analyzeFinancialHealth($data, $user->id);
+        $analysis = $this->gapGptService->analyzeFinancialHealth($data, $user->id, $user->auth_token);
         $summary = mb_strlen((string) ($analysis['analysis'] ?? '')) > 200 ? mb_substr((string) $analysis['analysis'], 0, 200).'...' : ($analysis['analysis'] ?? '');
 
         HealthAnalytics::query()->updateOrCreate(

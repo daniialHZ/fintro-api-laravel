@@ -24,11 +24,15 @@ class AiController extends BaseApiController
         $portfolio = PortfolioTarget::query()->where('user_id', $user->id)->get();
 
         $analysis = $this->gapGptService->analyzeFinancialHealth([
-            'total_income' => (float) $transactions->where('type', 'income')->sum('amount'),
-            'total_expense' => (float) $transactions->where('type', 'expense')->sum('amount'),
+            'total_income' => (float) $transactions->filter(
+                fn (Transaction $transaction) => strtolower((string) $transaction->type) === 'income'
+            )->sum('amount'),
+            'total_expense' => (float) $transactions->filter(
+                fn (Transaction $transaction) => strtolower((string) $transaction->type) === 'expense'
+            )->sum('amount'),
             'portfolio_distribution' => $portfolio->map(fn (PortfolioTarget $target) => ['title' => $target->title, 'percentage' => (float) $target->percentage])->all(),
             'time_range' => $payload['time_range'] ?? 'monthly',
-        ], $user->id);
+        ], $user->id, $user->auth_token);
 
         return response()->json($analysis);
     }
@@ -38,9 +42,14 @@ class AiController extends BaseApiController
         $payload = $request->validate([
             'current_portfolio' => ['required', 'array'],
         ]);
+        $user = $this->currentUser($request);
 
         return response()->json([
-            'recommendations' => $this->gapGptService->getPortfolioRecommendations($payload['current_portfolio'], $this->currentUser($request)->id),
+            'recommendations' => $this->gapGptService->getPortfolioRecommendations(
+                $payload['current_portfolio'],
+                $user->id,
+                $user->auth_token
+            ),
         ]);
     }
 
@@ -52,7 +61,7 @@ class AiController extends BaseApiController
         ]);
 
         $user = $this->currentUser($request);
-        $explanation = $this->gapGptService->explainAnomaly($payload['anomaly_description'], $payload['context'], $user->id);
+        $explanation = $this->gapGptService->explainAnomaly($payload['anomaly_description'], $payload['context'], $user->id, $user->auth_token);
         $today = Carbon::today()->toDateString();
         $record = AnomalyAnalytics::query()->firstOrCreate(
             ['user_id' => $user->id, 'analysis_date' => $today],
@@ -85,13 +94,19 @@ class AiController extends BaseApiController
     public function explainAnomaliesBatch(Request $request): JsonResponse
     {
         $payload = $request->validate(['anomalies' => ['required', 'array']]);
-        $userId = $this->currentUser($request)->id;
+        $user = $this->currentUser($request);
+        $userId = $user->id;
 
         $items = [];
         foreach ($payload['anomalies'] as $anomaly) {
             $items[] = [
                 'anomaly' => $anomaly['description'] ?? '',
-                'explanation' => $this->gapGptService->explainAnomaly($anomaly['description'] ?? '', $anomaly['context'] ?? [], $userId),
+                'explanation' => $this->gapGptService->explainAnomaly(
+                    $anomaly['description'] ?? '',
+                    $anomaly['context'] ?? [],
+                    $userId,
+                    $user->auth_token
+                ),
             ];
         }
 

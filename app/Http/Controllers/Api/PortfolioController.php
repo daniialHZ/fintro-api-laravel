@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\AILog;
 use App\Models\PortfolioTarget;
+use App\Services\GapGptService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PortfolioController extends BaseApiController
 {
+    public function __construct(private readonly GapGptService $gapGptService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $targets = PortfolioTarget::query()
@@ -93,22 +97,25 @@ class PortfolioController extends BaseApiController
 
     public function recommendations(Request $request): JsonResponse
     {
-        $targets = PortfolioTarget::query()
-            ->where('user_id', $this->currentUser($request)->id)
+        $user = $this->currentUser($request);
+        $portfolio = PortfolioTarget::query()
+            ->where('user_id', $user->id)
             ->get()
             ->map(fn (PortfolioTarget $target) => [
                 'title' => $target->title,
                 'percentage' => (float) $target->percentage,
-                'reasoning' => 'بر اساس اهداف فعلی ثبت شده در پرتفوی شما.',
-                'risk_level' => 'متوسط',
             ])
             ->values()
             ->all();
 
+        $suggestions = $this->gapGptService->getPortfolioRecommendations($portfolio, $user->id, $user->auth_token);
+
         return response()->json([
-            'success' => ! empty($targets),
-            'suggestions' => $targets,
-            'message' => ! empty($targets) ? 'پیشنهادات پرتفوی آماده است' : 'امکان دریافت پیشنهادات وجود ندارد',
+            'success' => ! empty($suggestions),
+            'suggestions' => $suggestions,
+            'message' => ! empty($suggestions)
+                ? 'AI portfolio recommendations generated successfully'
+                : 'Unable to generate portfolio recommendations',
         ]);
     }
 
