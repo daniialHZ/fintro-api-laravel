@@ -116,6 +116,10 @@ Route::prefix('v1')->group(function (): void {
             Route::delete('/users/{user}', [AdminController::class, 'destroyUser']);
             Route::get('/suggestions', [AdminController::class, 'suggestions']);
             Route::patch('/suggestions/{suggestion}', [AdminController::class, 'updateSuggestion']);
+            Route::get('/invite-codes', [InviteController::class, 'index']);
+            Route::post('/invite-codes', [InviteController::class, 'store']);
+            Route::post('/invite-codes/generate', [InviteController::class, 'generate']);
+            Route::delete('/invite-codes/{inviteCode}', [InviteController::class, 'destroy']);
         });
     });
 });
