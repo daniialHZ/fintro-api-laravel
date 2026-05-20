@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SourceController;
+use App\Http\Controllers\Api\SuggestionController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\WealthController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/portfolio/validate', [PortfolioController::class, 'validatePortfolio']);
         Route::get('/portfolio/recommendations', [PortfolioController::class, 'recommendations']);
         Route::get('/portfolio/recommendations/history', [PortfolioController::class, 'recommendationsHistory']);
+
+        Route::post('/suggestions', [SuggestionController::class, 'store']);
 
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::post('/categories', [CategoryController::class, 'store']);
