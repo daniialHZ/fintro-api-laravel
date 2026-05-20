@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\InviteController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ProfileController;
@@ -54,6 +55,13 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/portfolio/recommendations/history', [PortfolioController::class, 'recommendationsHistory']);
 
         Route::post('/suggestions', [SuggestionController::class, 'store']);
+
+        Route::prefix('notifications')->group(function (): void {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+            Route::post('/mark-all-read', [NotificationController::class, 'markAllRead']);
+            Route::patch('/{notification}/read', [NotificationController::class, 'markRead']);
+        });
 
         Route::get('/categories', [CategoryController::class, 'index']);
         Route::post('/categories', [CategoryController::class, 'store']);
@@ -116,6 +124,8 @@ Route::prefix('v1')->group(function (): void {
             Route::delete('/users/{user}', [AdminController::class, 'destroyUser']);
             Route::get('/suggestions', [AdminController::class, 'suggestions']);
             Route::patch('/suggestions/{suggestion}', [AdminController::class, 'updateSuggestion']);
+            Route::get('/notifications', [AdminController::class, 'notifications']);
+            Route::post('/notifications', [AdminController::class, 'storeNotification']);
             Route::get('/invite-codes', [InviteController::class, 'index']);
             Route::post('/invite-codes', [InviteController::class, 'store']);
             Route::post('/invite-codes/generate', [InviteController::class, 'generate']);

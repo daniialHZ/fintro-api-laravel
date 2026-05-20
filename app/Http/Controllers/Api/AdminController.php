@@ -6,6 +6,7 @@ use App\Models\AILog;
 use App\Models\Category;
 use App\Models\Goal;
 use App\Models\InviteCode;
+use App\Models\Notification;
 use App\Models\PortfolioTarget;
 use App\Models\Source;
 use App\Models\Transaction;
@@ -51,6 +52,8 @@ class AdminController extends BaseApiController
                 'sources' => Source::query()->count(),
                 'categories' => Category::query()->count(),
                 'invite_codes' => InviteCode::query()->count(),
+                'notifications' => Notification::query()->count(),
+                'unread_notifications' => Notification::query()->whereNull('read_at')->count(),
                 'active_users_24h' => $this->activeUsersCount(now()->subDay()),
                 'active_users_7d' => $this->activeUsersCount(now()->subDays(7)),
                 'active_users_30d' => $this->activeUsersCount(now()->subDays(30)),
@@ -112,6 +115,65 @@ class AdminController extends BaseApiController
             ->all();
 
         return response()->json($suggestions);
+    }
+
+    public function notifications(Request $request): JsonResponse
+    {
+        $search = trim((string) $request->query('search', ''));
+
+        $notifications = Notification::query()
+            ->with(['user', 'creator'])
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $inner) use ($search): void {
+                    $inner
+                        ->where('title', 'like', "%{$search}%")
+                        ->orWhere('message', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('email', 'like', "%{$search}%"));
+                });
+            })
+            ->orderByDesc('created_at')
+            ->limit(200)
+            ->get()
+            ->map(fn (Notification $notification) => $this->serializeNotification($notification))
+            ->all();
+
+        return response()->json($notifications);
+    }
+
+    public function storeNotification(Request $request): JsonResponse
+    {
+        $payload = $request->validate([
+            'target' => ['required', 'in:all,user'],
+            'user_id' => ['nullable', 'required_if:target,user', 'integer', 'exists:users,id'],
+            'title' => ['required', 'string', 'min:2', 'max:160'],
+            'message' => ['required', 'string', 'min:3', 'max:3000'],
+            'type' => ['nullable', 'in:info,success,warning,error'],
+            'action_url' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $admin = $this->currentUser($request);
+        $type = $payload['type'] ?? 'info';
+        $userIds = $payload['target'] === 'all'
+            ? User::query()->pluck('id')->all()
+            : [(int) $payload['user_id']];
+
+        $created = 0;
+        foreach ($userIds as $userId) {
+            Notification::query()->create([
+                'user_id' => $userId,
+                'created_by' => $admin->id,
+                'title' => trim($payload['title']),
+                'message' => trim($payload['message']),
+                'type' => $type,
+                'action_url' => $payload['action_url'] ?? null,
+            ]);
+            $created++;
+        }
+
+        return response()->json([
+            'message' => 'Notification created',
+            'created_count' => $created,
+        ], 201);
     }
 
     public function userData(User $user): JsonResponse
@@ -220,6 +282,23 @@ class AdminController extends BaseApiController
             'message' => $suggestion->message,
             'status' => $suggestion->status,
             'created_at' => $suggestion->created_at?->toISOString(),
+        ];
+    }
+
+    private function serializeNotification(Notification $notification): array
+    {
+        return [
+            'id' => $notification->id,
+            'user_id' => $notification->user_id,
+            'user_email' => $notification->user?->email,
+            'created_by' => $notification->created_by,
+            'creator_email' => $notification->creator?->email,
+            'title' => $notification->title,
+            'message' => $notification->message,
+            'type' => $notification->type,
+            'action_url' => $notification->action_url,
+            'read_at' => $notification->read_at?->toISOString(),
+            'created_at' => $notification->created_at?->toISOString(),
         ];
     }
 
