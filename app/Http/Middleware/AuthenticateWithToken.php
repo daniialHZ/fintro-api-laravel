@@ -23,6 +23,11 @@ class AuthenticateWithToken
             return response()->json(['detail' => 'Invalid token'], 401);
         }
 
+        if (! $user->last_seen_at || $user->last_seen_at->lt(now()->subMinutes(5))) {
+            $user->last_seen_at = now();
+            $user->save();
+        }
+
         $request->attributes->set('current_user', $user);
 
         return $next($request);

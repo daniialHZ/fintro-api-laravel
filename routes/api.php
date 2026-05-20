@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
@@ -105,6 +106,16 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/portfolio-recommendation', [AiController::class, 'portfolioRecommendation']);
             Route::post('/explain-anomaly', [AiController::class, 'explainAnomaly']);
             Route::post('/explain-anomalies-batch', [AiController::class, 'explainAnomaliesBatch']);
+        });
+
+        Route::middleware('admin')->prefix('admin')->group(function (): void {
+            Route::get('/overview', [AdminController::class, 'overview']);
+            Route::get('/users', [AdminController::class, 'users']);
+            Route::get('/users/{user}/data', [AdminController::class, 'userData']);
+            Route::patch('/users/{user}/role', [AdminController::class, 'updateUserRole']);
+            Route::delete('/users/{user}', [AdminController::class, 'destroyUser']);
+            Route::get('/suggestions', [AdminController::class, 'suggestions']);
+            Route::patch('/suggestions/{suggestion}', [AdminController::class, 'updateSuggestion']);
         });
     });
 });

@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             DefaultSourcesSeeder::class,
             DefaultCategoriesSeeder::class,
             InviteCodeSeeder::class,
+            AdminUserSeeder::class,
         ]);
     }
 }
