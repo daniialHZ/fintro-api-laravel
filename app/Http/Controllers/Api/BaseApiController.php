@@ -20,6 +20,11 @@ class BaseApiController extends Controller
         return [
             'id' => $user->id,
             'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'phone_number' => $user->phone_number,
+            'personal_info_completed' => (bool) $user->personal_info_completed_at,
+            'personal_info_completed_at' => $user->personal_info_completed_at?->toISOString(),
             'is_admin' => (bool) $user->is_admin,
             'last_seen_at' => $user->last_seen_at?->toISOString(),
             'created_at' => $user->created_at?->toISOString(),

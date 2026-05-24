@@ -82,6 +82,7 @@ Route::prefix('v1')->group(function (): void {
         Route::prefix('profile')->group(function (): void {
             Route::get('/', [ProfileController::class, 'show']);
             Route::put('/email', [ProfileController::class, 'updateEmail']);
+            Route::patch('/personal-info', [ProfileController::class, 'completePersonalInfo']);
             Route::put('/password', [ProfileController::class, 'updatePassword']);
             Route::post('/refresh-recommendations', [ProfileController::class, 'refreshRecommendations']);
             Route::get('/debug', [ProfileController::class, 'debug']);

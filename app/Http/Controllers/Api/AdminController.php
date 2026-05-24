@@ -259,6 +259,10 @@ class AdminController extends BaseApiController
         return [
             'id' => $user->id,
             'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'phone_number' => $user->phone_number,
+            'personal_info_completed' => (bool) $user->personal_info_completed_at,
             'is_admin' => (bool) $user->is_admin,
             'created_at' => $user->created_at?->toISOString(),
             'last_seen_at' => $user->last_seen_at?->toISOString(),

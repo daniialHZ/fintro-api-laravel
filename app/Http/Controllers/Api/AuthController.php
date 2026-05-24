@@ -24,6 +24,9 @@ class AuthController extends BaseApiController
     {
         $payload = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255'],
+            'first_name' => ['required', 'string', 'min:2', 'max:80'],
+            'last_name' => ['required', 'string', 'min:2', 'max:80'],
+            'phone_number' => ['required', 'string', 'min:7', 'max:30', 'regex:/^[0-9۰-۹+\-\s()]+$/u'],
             'password' => ['required', 'string', 'min:8', 'max:128'],
             'invite_code' => ['required', 'string', 'min:4', 'max:50'],
             'onboarding_answers.investment_experience' => ['required', 'in:none,basic,intermediate,advanced'],
@@ -51,6 +54,10 @@ class AuthController extends BaseApiController
 
         $user = User::query()->create([
             'email' => $email,
+            'first_name' => trim($payload['first_name']),
+            'last_name' => trim($payload['last_name']),
+            'phone_number' => trim($payload['phone_number']),
+            'personal_info_completed_at' => now(),
             'password_salt' => $salt,
             'password_hash' => $this->authService->hashPassword($payload['password'], $salt),
             'auth_token' => $token,

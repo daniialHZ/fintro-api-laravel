@@ -24,6 +24,10 @@ class AdminUserSeeder extends Seeder
             [
                 'password_salt' => $salt,
                 'password_hash' => $authService->hashPassword($password, $salt),
+                'first_name' => env('ADMIN_FIRST_NAME', 'Admin'),
+                'last_name' => env('ADMIN_LAST_NAME', 'User'),
+                'phone_number' => env('ADMIN_PHONE_NUMBER', '0000000000'),
+                'personal_info_completed_at' => now(),
                 'is_admin' => true,
             ],
         );

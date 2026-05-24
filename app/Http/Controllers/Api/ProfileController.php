@@ -63,6 +63,32 @@ class ProfileController extends BaseApiController
         return response()->json(['message' => 'Email updated successfully', 'email' => $email]);
     }
 
+    public function completePersonalInfo(Request $request): JsonResponse
+    {
+        $user = $this->currentUser($request);
+
+        if ($user->personal_info_completed_at) {
+            return response()->json(['detail' => 'Personal information is already completed'], 422);
+        }
+
+        $payload = $request->validate([
+            'first_name' => ['required', 'string', 'min:2', 'max:80'],
+            'last_name' => ['required', 'string', 'min:2', 'max:80'],
+            'phone_number' => ['required', 'string', 'min:7', 'max:30', 'regex:/^[0-9۰-۹+\-\s()]+$/u'],
+        ]);
+
+        $user->first_name = trim($payload['first_name']);
+        $user->last_name = trim($payload['last_name']);
+        $user->phone_number = trim($payload['phone_number']);
+        $user->personal_info_completed_at = now();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Personal information completed successfully',
+            'user' => $this->authUserPayload($user),
+        ]);
+    }
+
     public function updatePassword(Request $request): JsonResponse
     {
         $payload = $request->validate([

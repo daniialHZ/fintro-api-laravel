@@ -13,6 +13,10 @@ class User extends Authenticatable
 
     protected $fillable = [
         'email',
+        'first_name',
+        'last_name',
+        'phone_number',
+        'personal_info_completed_at',
         'password_salt',
         'password_hash',
         'auth_token',
@@ -35,6 +39,7 @@ class User extends Authenticatable
             'updated_at' => 'datetime',
             'is_admin' => 'boolean',
             'last_seen_at' => 'datetime',
+            'personal_info_completed_at' => 'datetime',
         ];
     }
 
