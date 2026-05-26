@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DebtController;
 use App\Http\Controllers\Api\GoalController;
 use App\Http\Controllers\Api\InviteController;
 use App\Http\Controllers\Api\NotificationController;
@@ -48,6 +49,20 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('wealth', WealthController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('/wealth/summary', [WealthController::class, 'summary']);
         Route::get('/wealth/debug/check-encryption', [WealthController::class, 'debugEncryption']);
+
+        Route::prefix('debts')->group(function (): void {
+            Route::get('/', [DebtController::class, 'index']);
+            Route::post('/', [DebtController::class, 'store']);
+            Route::get('/summary', [DebtController::class, 'summary']);
+            Route::get('/share-requests', [DebtController::class, 'shareRequests']);
+            Route::patch('/share-requests/{debtPerson}', [DebtController::class, 'respondToShare']);
+            Route::put('/{debtPerson}', [DebtController::class, 'update']);
+            Route::delete('/{debtPerson}', [DebtController::class, 'destroy']);
+            Route::get('/{debtPerson}/transactions', [DebtController::class, 'transactions']);
+            Route::post('/{debtPerson}/transactions', [DebtController::class, 'storeTransaction']);
+            Route::patch('/transactions/{debtTransaction}/respond', [DebtController::class, 'respondToTransaction']);
+            Route::delete('/transactions/{debtTransaction}', [DebtController::class, 'destroyTransaction']);
+        });
 
         Route::apiResource('portfolio', PortfolioController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('/portfolio/validate', [PortfolioController::class, 'validatePortfolio']);
